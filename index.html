@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f7f3" />
+    <title>Daymark — a little more focus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #18231f;
+        --muted: #7d8982;
+        --line: #e8ece7;
+        --paper: #ffffff;
+        --canvas: #f5f7f3;
+        --green: #176b50;
+        --green-dark: #10563f;
+        --mint: #dff2e7;
+        --lime: #d1f266;
+        --coral: #ed785e;
+        --shadow: 0 20px 60px rgb(31 48 38 / 8%);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button, input { font: inherit; }
+      button { color: inherit; }
+      .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+
+      .topbar {
+        height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 max(32px, calc((100vw - 1120px) / 2));
+        border-bottom: 1px solid rgb(24 35 31 / 6%);
+      }
+
+      .brand { display: flex; align-items: center; gap: 11px; }
+      .brand-mark {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border-radius: 11px;
+        background: var(--green);
+        color: white;
+      }
+      .brand-name {
+        font-family: Manrope, sans-serif;
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .saved-note { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+      .saved-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ba779; }
+
+      main {
+        width: min(100% - 48px, 1040px);
+        margin: 62px auto 80px;
+      }
+
+      .intro { margin-bottom: 30px; }
+      .eyebrow {
+        margin: 0 0 12px;
+        color: var(--green);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.3px;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0;
+        font-family: Manrope, sans-serif;
+        font-size: clamp(32px, 5vw, 46px);
+        font-weight: 700;
+        letter-spacing: 0;
+        line-height: 1.12;
+      }
+      .subtitle { margin: 10px 0 0; color: var(--muted); font-size: 15px; }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.5fr);
+        overflow: hidden;
+        min-height: 510px;
+        border: 1px solid #e9ede8;
+        border-radius: 16px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        padding: 28px 24px 24px;
+        background: #f0f5ef;
+      }
+      .date-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+      .date-day {
+        margin-top: 5px;
+        font-family: Manrope, sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      .progress-card {
+        margin-top: 25px;
+        padding: 17px 16px 16px;
+        border: 1px solid rgb(23 107 80 / 9%);
+        border-radius: 10px;
+        background: rgb(255 255 255 / 75%);
+      }
+      .progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .progress-title { font-size: 12px; font-weight: 700; }
+      .progress-value { color: var(--green); font-size: 12px; font-weight: 700; }
+      .progress-track { height: 6px; margin-top: 13px; overflow: hidden; border-radius: 99px; background: #e5ebe5; }
+      .progress-fill { width: 0; height: 100%; border-radius: inherit; background: var(--green); transition: width 220ms ease; }
+      .progress-copy { margin: 9px 0 0; color: var(--muted); font-size: 11px; }
+
+      .add-section { margin-top: 31px; }
+      .section-label { margin: 0 0 11px; font-size: 12px; font-weight: 700; }
+      .add-form { display: grid; gap: 9px; }
+      .task-input {
+        width: 100%;
+        min-height: 44px;
+        padding: 0 12px;
+        border: 1px solid #dce4dc;
+        border-radius: 8px;
+        outline: none;
+        background: white;
+        color: var(--ink);
+        font-size: 13px;
+        transition: border-color 150ms ease, box-shadow 150ms ease;
+      }
+      .task-input::placeholder { color: #a1aaa3; }
+      .task-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgb(23 107 80 / 11%); }
+      .add-button {
+        display: flex;
+        min-height: 43px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--green);
+        color: white;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        transition: background 150ms ease, transform 150ms ease;
+      }
+      .add-button:hover { transform: translateY(-1px); background: var(--green-dark); }
+      .add-button:active { transform: translateY(0); }
+      .plus { font-size: 18px; font-weight: 400; line-height: 1; }
+
+      .sidebar-foot {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: auto;
+        padding-top: 28px;
+        color: #65736a;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+      .foot-spark { display: grid; width: 27px; height: 27px; flex: 0 0 auto; place-items: center; border-radius: 9px; background: var(--lime); color: #465b19; font-size: 14px; }
+
+      .list-panel { min-width: 0; padding: 26px 30px 23px; }
+      .list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+      .list-heading { margin: 0; font-family: Manrope, sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0; }
+      .filters { display: flex; align-items: center; gap: 3px; padding: 3px; border-radius: 8px; background: #f3f5f2; }
+      .filter-button {
+        min-height: 30px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #78837b;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 600;
+        transition: color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+      }
+      .filter-button:hover { color: var(--ink); }
+      .filter-button[aria-pressed="true"] { background: white; color: var(--green); box-shadow: 0 1px 3px rgb(23 35 28 / 9%); }
+
+      .task-list { display: grid; align-content: start; }
+      .task-row {
+        display: grid;
+        grid-template-columns: 20px minmax(0, 1fr) 32px;
+        align-items: center;
+        gap: 12px;
+        min-height: 64px;
+        border-bottom: 1px solid #edf0ec;
+        animation: arrive 180ms ease both;
+      }
+      @keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+      .check-button {
+        display: grid;
+        width: 20px;
+        height: 20px;
+        place-items: center;
+        padding: 0;
+        border: 1.5px solid #c8d2c9;
+        border-radius: 6px;
+        background: white;
+        color: white;
+        cursor: pointer;
+        transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+      }
+      .check-button:hover { border-color: var(--green); transform: scale(1.05); }
+      .check-button[aria-pressed="true"] { border-color: var(--green); background: var(--green); }
+      .check-icon { display: none; width: 11px; height: 11px; }
+      .check-button[aria-pressed="true"] .check-icon { display: block; }
+      .empty-illustration .check-icon { display: block; }
+      .task-title { overflow-wrap: anywhere; color: #303b34; font-size: 13px; line-height: 1.5; }
+      .task-row.is-complete .task-title { color: #9aa39c; text-decoration: line-through; text-decoration-color: #afb8b0; }
+      .delete-button {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: #9ba49d;
+        cursor: pointer;
+        opacity: 0;
+        transition: background 150ms ease, color 150ms ease, opacity 150ms ease;
+      }
+      .task-row:hover .delete-button, .delete-button:focus-visible { opacity: 1; }
+      .delete-button:hover { background: #fff0ec; color: #c5523f; }
+      .delete-button svg { width: 15px; height: 15px; }
+
+      .empty-state { display: grid; min-height: 280px; align-content: center; justify-items: center; padding: 30px; text-align: center; }
+      .empty-illustration {
+        display: grid;
+        width: 55px;
+        height: 55px;
+        place-items: center;
+        border: 1px solid #e7ede5;
+        border-radius: 18px;
+        background: #f6f9f4;
+        color: var(--green);
+      }
+      .empty-illustration svg { width: 25px; height: 25px; }
+      .empty-title { margin: 16px 0 5px; font-family: Manrope, sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0; }
+      .empty-copy { max-width: 230px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+      .list-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 15px; color: var(--muted); font-size: 11px; }
+      .clear-button { padding: 5px 0 5px 8px; border: 0; background: transparent; color: var(--green); cursor: pointer; font-size: 11px; font-weight: 600; }
+      .clear-button:hover { color: var(--green-dark); text-decoration: underline; }
+      .clear-button:disabled { color: #b2bab4; cursor: default; text-decoration: none; }
+
+      :focus-visible { outline: 3px solid rgb(237 120 94 / 58%); outline-offset: 3px; }
+
+      @media (max-width: 680px) {
+        .topbar { height: 64px; padding: 0 20px; }
+        main { width: min(100% - 32px, 520px); margin: 36px auto 48px; }
+        .intro { margin-bottom: 22px; }
+        .workspace { grid-template-columns: 1fr; }
+        .sidebar { padding: 22px 20px 18px; }
+        .date-day { font-size: 24px; }
+        .progress-card { margin-top: 18px; }
+        .add-section { margin-top: 22px; }
+        .sidebar-foot { display: none; }
+        .list-panel { padding: 22px 20px 17px; }
+        .task-row { min-height: 60px; }
+        .delete-button { opacity: 1; }
+      }
+
+      @media (max-width: 390px) {
+        .list-toolbar { align-items: flex-start; flex-direction: column; }
+        .filters { width: 100%; }
+        .filter-button { flex: 1; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand" aria-label="Daymark home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 4.75h10A2.25 2.25 0 0 1 19.25 7v10A2.25 2.25 0 0 1 17 19.25H7A2.25 2.25 0 0 1 4.75 17V7A2.25 2.25 0 0 1 7 4.75Z" stroke="currentColor" stroke-width="1.7" />
+            <path d="m8.2 12.2 2.4 2.4 5.2-5.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <span class="brand-name">daymark</span>
+      </div>
+      <div class="saved-note"><span class="saved-dot" aria-hidden="true"></span>Saved on this device</div>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">A little more focus</p>
+        <h1 id="page-title">Make room for today.</h1>
+        <p class="subtitle">A simple list for everything on your mind.</p>
+      </section>
+
+      <section class="workspace" aria-label="Daily task planner">
+        <aside class="sidebar">
+          <div>
+            <div class="date-label" id="date-label">TODAY</div>
+            <div class="date-day" id="date-day"></div>
+          </div>
+
+          <section class="progress-card" aria-label="Daily progress">
+            <div class="progress-head">
+              <span class="progress-title">Your progress</span>
+              <span class="progress-value" id="progress-value">0%</span>
+            </div>
+            <div class="progress-track" id="progress-track" role="progressbar" aria-label="Tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <p class="progress-copy" id="progress-copy">Add a task to get started</p>
+          </section>
+
+          <section class="add-section" aria-labelledby="add-heading">
+            <h2 class="section-label" id="add-heading">Add a task</h2>
+            <form class="add-form" id="add-form">
+              <label class="visually-hidden" for="task-input">Task name</label>
+              <input class="task-input" id="task-input" name="task" type="text" maxlength="180" placeholder="What needs doing?" autocomplete="off" required />
+              <button class="add-button" type="submit"><span class="plus" aria-hidden="true">+</span> Add to my day</button>
+            </form>
+          </section>
+
+          <div class="sidebar-foot"><span class="foot-spark" aria-hidden="true">✳</span><span>Small steps still move<br />you forward.</span></div>
+        </aside>
+
+        <section class="list-panel" aria-labelledby="list-heading">
+          <div class="list-toolbar">
+            <h2 class="list-heading" id="list-heading">Your tasks</h2>
+            <div class="filters" role="group" aria-label="Filter tasks">
+              <button class="filter-button" type="button" data-filter="all" aria-pressed="true">All</button>
+              <button class="filter-button" type="button" data-filter="active" aria-pressed="false">To do</button>
+              <button class="filter-button" type="button" data-filter="completed" aria-pressed="false">Done</button>
+            </div>
+          </div>
+
+          <div class="task-list" id="task-list" aria-live="polite" aria-relevant="additions removals text"></div>
+
+          <div class="list-footer">
+            <span id="task-count">0 tasks</span>
+            <button class="clear-button" id="clear-completed" type="button" disabled>Clear completed</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const STORAGE_KEY = "daymark-tasks-v1";
+      const taskList = document.querySelector("#task-list");
+      const taskInput = document.querySelector("#task-input");
+      const taskCount = document.querySelector("#task-count");
+      const clearCompletedButton = document.querySelector("#clear-completed");
+      const progressValue = document.querySelector("#progress-value");
+      const progressFill = document.querySelector("#progress-fill");
+      const progressTrack = document.querySelector("#progress-track");
+      const progressCopy = document.querySelector("#progress-copy");
+      const filters = document.querySelectorAll("[data-filter]");
+      let activeFilter = "all";
+      let tasks = loadTasks();
+
+      function loadTasks() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          if (!Array.isArray(stored)) return [];
+          return stored.filter((task) =>
+            task && typeof task.id === "string" && typeof task.title === "string" && typeof task.completed === "boolean"
+          );
+        } catch {
+          return [];
+        }
+      }
+
+      function saveTasks() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        } catch {
+          progressCopy.textContent = "Your browser could not save changes";
+        }
+      }
+
+      function makeIcon(name) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        if (name === "check") svg.classList.add("check-icon");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "2");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("aria-hidden", "true");
+
+        if (name === "check") {
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("d", "m5 12 4 4L19 6");
+          svg.append(path);
+        } else if (name === "trash") {
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("d", "M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6");
+          svg.append(path);
+        }
+        return svg;
+      }
+
+      function createTaskRow(task) {
+        const row = document.createElement("article");
+        row.className = `task-row${task.completed ? " is-complete" : ""}`;
+
+        const checkButton = document.createElement("button");
+        checkButton.className = "check-button";
+        checkButton.type = "button";
+        checkButton.setAttribute("aria-pressed", String(task.completed));
+        checkButton.setAttribute("aria-label", `${task.completed ? "Mark as not done" : "Mark as done"}: ${task.title}`);
+        checkButton.append(makeIcon("check"));
+        checkButton.addEventListener("click", () => {
+          task.completed = !task.completed;
+          saveTasks();
+          render();
+        });
+
+        const title = document.createElement("span");
+        title.className = "task-title";
+        title.textContent = task.title;
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete-button";
+        deleteButton.type = "button";
+        deleteButton.setAttribute("aria-label", `Delete task: ${task.title}`);
+        deleteButton.append(makeIcon("trash"));
+        deleteButton.addEventListener("click", () => {
+          tasks = tasks.filter((item) => item.id !== task.id);
+          saveTasks();
+          render();
+        });
+
+        row.append(checkButton, title, deleteButton);
+        return row;
+      }
+
+      function renderEmptyState() {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+
+        const illustration = document.createElement("div");
+        illustration.className = "empty-illustration";
+        illustration.setAttribute("aria-hidden", "true");
+        illustration.append(makeIcon("check"));
+
+        const title = document.createElement("h3");
+        title.className = "empty-title";
+        const copy = document.createElement("p");
+        copy.className = "empty-copy";
+
+        if (tasks.length === 0) {
+          title.textContent = "A fresh start";
+          copy.textContent = "Add your first task and make a little space in your mind.";
+        } else if (activeFilter === "active") {
+          title.textContent = "All caught up";
+          copy.textContent = "You have no tasks left to do. Enjoy the breathing room.";
+        } else {
+          title.textContent = "Nothing checked off yet";
+          copy.textContent = "Finished tasks will find their way here.";
+        }
+
+        empty.append(illustration, title, copy);
+        taskList.append(empty);
+      }
+
+      function render() {
+        taskList.replaceChildren();
+        const visibleTasks = tasks.filter((task) => {
+          if (activeFilter === "active") return !task.completed;
+          if (activeFilter === "completed") return task.completed;
+          return true;
+        });
+
+        if (visibleTasks.length === 0) renderEmptyState();
+        else visibleTasks.forEach((task) => taskList.append(createTaskRow(task)));
+
+        const completedCount = tasks.filter((task) => task.completed).length;
+        const remainingCount = tasks.length - completedCount;
+        const percentage = tasks.length === 0 ? 0 : Math.round((completedCount / tasks.length) * 100);
+        taskCount.textContent = `${remainingCount} ${remainingCount === 1 ? "task" : "tasks"} left`;
+        progressValue.textContent = `${percentage}%`;
+        progressFill.style.width = `${percentage}%`;
+        progressTrack.setAttribute("aria-valuenow", String(percentage));
+        progressCopy.textContent = tasks.length === 0
+          ? "Add a task to get started"
+          : completedCount === tasks.length
+            ? "Everything on your list is done"
+            : `${completedCount} of ${tasks.length} ${tasks.length === 1 ? "task" : "tasks"} complete`;
+        clearCompletedButton.disabled = completedCount === 0;
+      }
+
+      document.querySelector("#add-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const title = taskInput.value.trim();
+        if (!title) {
+          taskInput.focus();
+          return;
+        }
+
+        tasks.unshift({ id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`, title, completed: false });
+        activeFilter = "all";
+        filters.forEach((filter) => filter.setAttribute("aria-pressed", String(filter.dataset.filter === activeFilter)));
+        saveTasks();
+        render();
+        taskInput.value = "";
+        taskInput.focus();
+      });
+
+      filters.forEach((filter) => {
+        filter.addEventListener("click", () => {
+          activeFilter = filter.dataset.filter;
+          filters.forEach((button) => button.setAttribute("aria-pressed", String(button === filter)));
+          render();
+        });
+      });
+
+      clearCompletedButton.addEventListener("click", () => {
+        tasks = tasks.filter((task) => !task.completed);
+        saveTasks();
+        render();
+      });
+
+      const today = new Date();
+      document.querySelector("#date-label").textContent = new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(today).toUpperCase();
+      document.querySelector("#date-day").textContent = new Intl.DateTimeFormat(undefined, { month: "long", day: "numeric", year: "numeric" }).format(today);
+      render();
+    </script>
+  </body>
+</html>
